@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GWS Account Provisioner</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <div class="container">
+    <h1>Google Workspace アカウント発行</h1>
+
+    <form id="accountForm">
+      <div class="field">
+        <label for="lastName">姓（ローマ字）</label>
+        <input type="text" id="lastName" name="lastName" required
+               placeholder="Yamada" pattern="[A-Za-z\-]+" title="半角英字で入力してください" />
+      </div>
+
+      <div class="field">
+        <label for="firstName">名（ローマ字）</label>
+        <input type="text" id="firstName" name="firstName" required
+               placeholder="Taro" pattern="[A-Za-z\-]+" title="半角英字で入力してください" />
+      </div>
+
+      <div class="field">
+        <label for="email">アカウント名（メールアドレス）</label>
+        <input type="email" id="email" name="email" required placeholder="taro.yamada@example.com" />
+        <small class="hint">姓名から自動生成されますが、手動で編集も可能です。</small>
+      </div>
+
+      <div class="field">
+        <label for="ou">組織部門（OU）</label>
+        <select id="ou" name="ou" required>
+          <option value="">-- 読み込み中 --</option>
+        </select>
+      </div>
+
+      <button type="submit" id="submitBtn">アカウントを作成</button>
+    </form>
+
+    <div id="result" class="result" hidden></div>
+  </div>
+
+  <script src="/app.js"></script>
+</body>
+</html>
