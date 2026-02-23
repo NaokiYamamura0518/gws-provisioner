@@ -2,11 +2,8 @@
   "name": "gws-provisioner",
   "version": "1.0.0",
   "private": true,
-  "description": "Google Workspace account provisioning tool",
-  "scripts": {
-    "dev": "vercel dev"
-  },
+  "type": "module",
   "dependencies": {
-    "googleapis": "^144.0.0"
+    "googleapis": "^118.0.0"
   }
 }
