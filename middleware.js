@@ -1,9 +1,3 @@
-import { NextResponse } from "next/server";
-
-export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
-};
-
 export default function middleware(request) {
   const authHeader = request.headers.get("authorization");
 
@@ -17,15 +11,19 @@ export default function middleware(request) {
       const validPass = process.env.BASIC_AUTH_PASS;
 
       if (user === validUser && pass === validPass) {
-        return NextResponse.next();
+        return;
       }
     }
   }
 
-  return new NextResponse("Unauthorized", {
+  return new Response("Unauthorized", {
     status: 401,
     headers: {
       "WWW-Authenticate": 'Basic realm="Restricted"',
     },
   });
 }
+
+export const config = {
+  matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
+};
