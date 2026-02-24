@@ -1,19 +1,4 @@
-import { google } from "googleapis";
-
-// ---------------------
-// Google Admin SDK client
-// ---------------------
-function getAdminClient() {
-  const keyJson = JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT_KEY);
-  const auth = new google.auth.JWT(
-    keyJson.client_email,
-    null,
-    keyJson.private_key,
-    ["https://www.googleapis.com/auth/admin.directory.user"],
-    process.env.GOOGLE_ADMIN_EMAIL // domain-wide delegation: impersonate admin
-  );
-  return google.admin({ version: "directory_v1", auth });
-}
+import { getAdminClient } from "./google-auth.js";
 
 // ---------------------
 // Slack notification
@@ -66,7 +51,7 @@ export default async function handler(req, res) {
   const { firstName, lastName, email, orgUnitPath } = body;
 
   try {
-    const admin = getAdminClient();
+    const admin = await getAdminClient(["https://www.googleapis.com/auth/admin.directory.user"]);
 
     await admin.users.insert({
       requestBody: {

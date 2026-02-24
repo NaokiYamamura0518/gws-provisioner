@@ -1,16 +1,4 @@
-import { google } from "googleapis";
-
-function getAdminClient() {
-  const keyJson = JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT_KEY);
-  const auth = new google.auth.JWT(
-    keyJson.client_email,
-    null,
-    keyJson.private_key,
-    ["https://www.googleapis.com/auth/admin.directory.orgunit.readonly"],
-    process.env.GOOGLE_ADMIN_EMAIL
-  );
-  return google.admin({ version: "directory_v1", auth });
-}
+import { getAdminClient } from "./google-auth.js";
 
 export default async function handler(req, res) {
   if (req.method !== "GET") {
@@ -18,7 +6,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    const admin = getAdminClient();
+    const admin = await getAdminClient(["https://www.googleapis.com/auth/admin.directory.orgunit.readonly"]);
     const response = await admin.orgunits.list({
       customerId: "my_customer",
       type: "all",
