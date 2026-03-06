@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>経費精算 - 領収書→支払依頼 自動化</title>
+  <link rel="stylesheet" href="/expense.css" />
+</head>
+<body>
+  <div class="container">
+    <h1>経費精算 自動化</h1>
+    <p class="subtitle">領収書をアップロードして、支払依頼まで一括処理</p>
+
+    <!-- 未認証時：ログインボタン -->
+    <div id="login-section" style="display:none;">
+      <div class="login-card">
+        <p>freeeアカウントでログインしてください。</p>
+        <a href="/api/freee-auth" class="btn btn-freee">freee でログイン</a>
+      </div>
+    </div>
+
+    <!-- 認証済み：メインフォーム -->
+    <div id="main-section" style="display:none;">
+      <!-- ステップ表示 -->
+      <div class="steps">
+        <div class="step active" data-step="1">
+          <span class="step-num">1</span>
+          <span class="step-label">領収書アップロード</span>
+        </div>
+        <div class="step-arrow">→</div>
+        <div class="step" data-step="2">
+          <span class="step-num">2</span>
+          <span class="step-label">明細入力</span>
+        </div>
+        <div class="step-arrow">→</div>
+        <div class="step" data-step="3">
+          <span class="step-num">3</span>
+          <span class="step-label">支払依頼</span>
+        </div>
+      </div>
+
+      <!-- Step 1: 領収書アップロード -->
+      <div id="step1" class="step-content active">
+        <div class="upload-area" id="drop-zone">
+          <div class="upload-icon">📄</div>
+          <p>領収書の画像をドラッグ＆ドロップ<br>またはクリックして選択</p>
+          <input type="file" id="receipt-file" accept="image/*,.pdf" />
+        </div>
+        <div id="upload-preview" style="display:none;">
+          <img id="preview-img" alt="プレビュー" />
+          <p id="preview-name"></p>
+        </div>
+        <div class="form-group">
+          <label for="receipt-date">取引日</label>
+          <input type="date" id="receipt-date" />
+        </div>
+        <div class="form-group">
+          <label for="receipt-memo">メモ（任意）</label>
+          <input type="text" id="receipt-memo" placeholder="領収書の説明" maxlength="255" />
+        </div>
+        <button id="btn-upload" class="btn btn-primary" disabled>
+          アップロードして次へ
+        </button>
+        <div id="upload-status" class="status-msg"></div>
+      </div>
+
+      <!-- Step 2: 明細入力 -->
+      <div id="step2" class="step-content">
+        <form id="expense-form">
+          <div class="form-group">
+            <label for="pr-title">申請タイトル <span class="required">*</span></label>
+            <input type="text" id="pr-title" required placeholder="例：交通費精算 3月分" />
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="pr-issue-date">発生日</label>
+              <input type="date" id="pr-issue-date" />
+            </div>
+            <div class="form-group">
+              <label for="pr-due-date">支払期日</label>
+              <input type="date" id="pr-due-date" />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="pr-partner">取引先</label>
+            <select id="pr-partner">
+              <option value="">（未選択）</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="pr-approval-route">申請経路 <span class="required">*</span></label>
+            <select id="pr-approval-route" required>
+              <option value="">読み込み中...</option>
+            </select>
+          </div>
+
+          <h3>明細行</h3>
+          <div id="line-items">
+            <div class="line-item" data-index="0">
+              <div class="form-row">
+                <div class="form-group flex-2">
+                  <label>摘要 <span class="required">*</span></label>
+                  <input type="text" class="line-desc" required placeholder="内容の説明" />
+                </div>
+                <div class="form-group flex-1">
+                  <label>金額 <span class="required">*</span></label>
+                  <input type="number" class="line-amount" required min="1" placeholder="0" />
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-group flex-1">
+                  <label>勘定科目</label>
+                  <select class="line-account">
+                    <option value="">（未選択）</option>
+                  </select>
+                </div>
+                <div class="form-group flex-1">
+                  <label>税区分</label>
+                  <select class="line-tax">
+                    <option value="">（未選択）</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+          <button type="button" id="btn-add-line" class="btn btn-secondary">＋ 明細を追加</button>
+
+          <div class="form-group">
+            <label for="pr-description">備考</label>
+            <textarea id="pr-description" rows="2" placeholder="補足事項（任意）"></textarea>
+          </div>
+
+          <div class="total-bar">
+            合計金額: <span id="total-amount">¥0</span>
+          </div>
+
+          <div class="form-actions">
+            <button type="button" id="btn-back-step1" class="btn btn-secondary">戻る</button>
+            <button type="submit" class="btn btn-primary">支払依頼を作成</button>
+          </div>
+        </form>
+        <div id="submit-status" class="status-msg"></div>
+      </div>
+
+      <!-- Step 3: 完了 -->
+      <div id="step3" class="step-content">
+        <div class="success-card">
+          <div class="success-icon">✓</div>
+          <h2>支払依頼を作成しました</h2>
+          <p id="result-summary"></p>
+          <button id="btn-new" class="btn btn-primary">新しい経費精算を始める</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="/expense.js"></script>
+</body>
+</html>

@@ -1,4 +1,10 @@
 export default function middleware(request) {
+  // freee OAuth2コールバックはBasic認証をスキップ
+  const url = new URL(request.url);
+  if (url.pathname === "/api/freee-callback") {
+    return;
+  }
+
   const authHeader = request.headers.get("authorization");
 
   if (authHeader) {
